@@ -23,19 +23,47 @@ const Import: React.FC = () => {
   const history = useHistory();
 
   async function handleUpload(): Promise<void> {
-    // const data = new FormData();
+    const data = new FormData();
 
     // TODO
+    uploadedFiles.forEach(uploadedFile => data.append('file', uploadedFile.file, uploadedFile.name));
 
+    console.log(data);
     try {
-      // await api.post('/transactions/import', data);
+      await api.post('/transactions/import', data);
     } catch (err) {
-      // console.log(err.response.error);
+      console.log(err.response.error);
     }
   }
 
   function submitFile(files: File[]): void {
     // TODO
+    const newUploadedFiles: FileProps[] = files.map(file => (
+      {
+        file,
+        name: file.name,
+        readableSize: file.size.toString(),
+      }
+    ));
+
+    // get already uploaded files names
+    const uploadedFilesNames = uploadedFiles.map(uploadedFile => uploadedFile.name);
+
+    // find duplicated files names
+    const duplicatedFileNames = newUploadedFiles.filter(newUploadedFile => uploadedFilesNames.includes(newUploadedFile.name)).map(newUploadedFile => newUploadedFile.name);
+
+    // warn user about duplicated files names
+    if (duplicatedFileNames.length === 1) {
+      window.alert(`O arquivo ${duplicatedFileNames} já está na lista e foi ignorado.`);
+    } else if (duplicatedFileNames.length > 1){
+      window.alert(`O(s) arquivos ${duplicatedFileNames} já estão na lista e foram ignorados.`);
+    }
+
+    // get files to be uploaded
+    const toBeUploadedFiles = newUploadedFiles.filter(newUploadedFile => !uploadedFilesNames.includes(newUploadedFile.name));
+
+    // set variable
+    setUploadedFiles([...uploadedFiles, ...toBeUploadedFiles]);
   }
 
   return (
